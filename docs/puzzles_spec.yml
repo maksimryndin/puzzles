@@ -1,0 +1,200 @@
+---
+swagger: "2.0"
+info:
+  title: Puzzles Service
+  version: 0.0.10
+  description: |
+    ## Versions Log
+
+    ### 0.0.1
+
+  contact:
+    name: "Maksim Ryndin"
+    email: "maksim.ryndin@gmail.com"
+  license:
+    name: "MIT"
+
+schemes:
+  - "http"
+  - "https"
+basePath: "/puzzles/api/v1/"
+produces:
+  - "application/json"
+tags:
+  - name: Puzzles
+    description: |
+      Interview Puzzles.
+      Puzzles suggested at interviews.
+
+paths:
+  /puzzles:
+    get:
+      operationId: puzzles.list
+      description: Get puzzles list by search criteria
+      tags:
+        - Puzzles
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/sort'
+      responses:
+        200:
+          description: List of puzzles by search criteria
+          headers:
+            X-Total-Count:
+              description: Total number of entries
+              type: integer
+            Link:
+              description: Next/Prev links navigation
+              type: string
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Puzzle'
+    post:
+      operationId: puzzles.create
+      description: Add new puzzle
+      tags:
+        - Puzzles
+      parameters:
+        - in: body
+          schema:
+            $ref: '#/definitions/Puzzle'
+      responses:
+        201:
+          description: Puzzle created
+
+  /puzzles/{puzzleId}:
+    parameters:
+      - name: puzzleId
+        in: path
+        type: integer
+    get:
+      operationId: puzzles.read
+      description: Get puzzle by id
+      tags:
+        - Puzzles
+      responses:
+        200:
+          description: Puzzle with corresponding id
+          schema:
+            $ref: '#/definitions/Puzzle'
+    put:
+      operationId: puzzles.update
+      description: Update puzzle by id
+      tags:
+        - Puzzles
+      parameters:
+        - in: body
+          schema:
+            $ref: '#/definitions/Puzzle'
+      responses:
+        200:
+          description: Puzzle with corresponding id updated
+          schema:
+            $ref: '#/definitions/Puzzle'
+    delete:
+      operationId: puzzles.delete
+      description: Delete puzzle by id
+      tags:
+        - Puzzles
+      responses:
+        200:
+          description: Puzzle with corresponding id deleted. Returns deleted puzzle.
+          schema:
+            $ref: '#/definitions/Puzzle'
+
+parameters:
+  page:
+    name: page
+    in: query
+    description: List page number
+    type: integer
+    default: 0
+  perPage:
+    name: per_page
+    in: query
+    description: Number of entries per page
+    type: integer
+    default: 10
+  sort:
+    name: sort
+    in: query
+    description: Params to sort by ("-" sign means reverse ordering)
+    type: array
+    items:
+      type: string
+    example:
+      - name
+      - -updated
+
+  tags:
+    description: |
+      Tags
+    name: tags
+    in: query
+    type: array
+    items:
+      type: string
+    example:
+      - middle
+      - python
+
+definitions:
+  Error:
+    description: Error
+    type: object
+    required:
+      - message
+    properties:
+      errors:
+        description: Errors list
+        type: array
+        items:
+          $ref: '#/definitions/Error'
+      message:
+        description: Error message
+        type: string
+        example: Validation error
+  ValidationError:
+    description: Data validity error
+    allOf:
+      - $ref: '#/definitions/Error'
+      - required:
+          - field
+        properties:
+          field:
+            description: Invalid field name
+            type: string
+          value:
+            description: Invalid field value
+  Puzzle:
+    description: Puzzle
+    type: object
+    properties:
+      id:
+        type: integer
+        minLength: 1
+        example: 25
+      tags:
+        type: array
+        items:
+          type: string
+        example:
+          - middle
+          - python
+      name:
+        type: string
+        maxLength: 128
+        example: Задача о мышах
+      description:
+        type: string
+        example: Задача о мышах
+      answer:
+        type: string
+        example: Задача о мышах
+    required:
+      - id
+      - name
+      - description
+      - answer
