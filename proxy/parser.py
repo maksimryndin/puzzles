@@ -3,6 +3,7 @@ import re
 from tornado.options import options
 from elasticsearch.helpers import bulk
 from elasticsearch.client import Elasticsearch
+import jsonschema
 
 from .helpers import get_puzzle_definition
 
@@ -28,8 +29,16 @@ class Parser:
             puzzle = {}
             for line in input_file:
                 if line == "\n":
-                    if puzzle:  # TODO Add validation vs schema
-                        yield puzzle
+                    if puzzle:
+                        try:
+                            jsonschema.validate(
+                                puzzle,
+                                self.puzzle_definition,
+                            )
+                        except jsonschema.ValidationError:
+                            print("Invalid data {}".format(puzzle))
+                        else:
+                            yield puzzle
                     puzzle = {}
                 else:
                     match = re.search(r"^(?P<attribute>\w+):\s(?P<value>.*)\n$", line, re.IGNORECASE)
@@ -40,14 +49,14 @@ class Parser:
                             puzzle[attribute] = value
 
 
-def provide_initial_data(app):
+def provide_initial_data(app, es=None):
     puzzles = Parser(options.data_file_path, app.schema).parse_file()
     actions = [{
         "_index": options.index_name,
         "_type": options.es_type,
         "_source": puzzle
     } for puzzle in puzzles]
-    print(puzzles)
-    es = Elasticsearch(hosts=[options.es_host])
+    if es is None:
+        es = Elasticsearch(hosts=[options.es_host])
     bulk(es, actions)
 

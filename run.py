@@ -10,12 +10,15 @@ from elasticsearch.client import Elasticsearch, IndicesClient
 
 def main():
     app = create_app()
-    app.listen(options.port)
-    print("Puzzles Service Running on http://localhost:{port}".format(port=options.port))
-    provide_initial_data(app)
     es = Elasticsearch(hosts=[options.es_host])
     indices = IndicesClient(es)
-    indices.delete([options.index_name])
+    if not indices.exists([options.index_name]):
+        provide_initial_data(app, es=None)
+    # TODO not load data after restart if exists
+    #else:
+        #indices.delete([options.index_name])
+    app.listen(options.port)
+    print("Puzzles Service Running on http://localhost:{port}".format(port=options.port))
     tornado.ioloop.IOLoop.current().start()
 
 

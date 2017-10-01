@@ -39,9 +39,8 @@ class PuzzlesListHandler(BaseHandler):
                     }
                 }
             }
-            result = await self.application.es_client.search(index=options.index_name, body=query, filter_path=['hits.hits'])
-        else:
-            result = await self.application.es_client.search(index=options.index_name, body=query, filter_path=['hits.hits'])
+        # TODO Add pagination
+        result = await self.application.es_client.search(index=options.index_name, body=query, filter_path=['hits.hits'])
         self.finish(result)
 
     async def post(self, *args, **kwargs):
@@ -69,7 +68,7 @@ class SinglePuzzleHandler(BaseHandler):
 
     async def put(self, *args, **kwargs):
         raw_data = self.request.body
-        #data = validate_puzzle_data(self.schema, raw_data)
+        #data = validate_puzzle_data(self.schema, raw_data)     # TODO add partial validation
         result = await self.application.es_client.index(index=options.index_name, doc_type=options.es_type,
                                                         id=self.path_kwargs['id'], body=raw_data)
         self.finish(result)

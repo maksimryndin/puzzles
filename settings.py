@@ -4,7 +4,7 @@ from tornado.options import define
 
 PROJECT_ROOT = os.environ.get("PROJECT_ROOT", os.path.dirname(os.path.abspath(__file__)))
 
-define("port", default=os.environ.get('PORT', 8888), help="run on the given port", type=int)
+define("port", default=os.environ.get('PORT', 8080), help="run on the given port", type=int)
 define("debug", default=os.environ.get('DEBUG', False), help="debug mode")
 
 define("schema_path", default=os.environ.get('SCHEMA_PATH', os.path.join(PROJECT_ROOT, "docs", "puzzles_spec.yml")),
