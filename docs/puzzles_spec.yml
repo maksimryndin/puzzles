@@ -173,9 +173,9 @@ definitions:
     type: object
     properties:
       id:
-        type: integer
+        type: string
         minLength: 1
-        example: 25
+        example: "AV7YBNo3lML7A6lX4z5O"
       tags:
         type: array
         items:
@@ -194,7 +194,6 @@ definitions:
         type: string
         example: Задача о мышах
     required:
-      - id
       - name
       - description
       - answer
