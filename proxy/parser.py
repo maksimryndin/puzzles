@@ -15,14 +15,12 @@ class Puzzle:
         self.tags = []
 
 
-
 class Parser:
 
     def __init__(self, file_path, schema):
         self.file_path = file_path
         self.schema = schema
         self.puzzle_definition = get_puzzle_definition(self.schema)
-
 
     def parse_file(self):
         with open(self.file_path) as input_file:

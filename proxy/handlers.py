@@ -1,4 +1,4 @@
-from tornado import web, gen
+from tornado import web
 from tornado.options import options
 from jsonschema import ValidationError
 
@@ -30,15 +30,24 @@ class PuzzlesListHandler(BaseHandler):
     """
 
     async def get(self, *args, **kwargs):
-        result = yield self.application.es_client.search(index=options.index_name)
+        query = self.get_argument("q", None)
+        if query:
+            query = {
+                "query": {
+                    "query_string": {
+                        "query": query
+                    }
+                }
+            }
+            result = await self.application.es_client.search(index=options.index_name, body=query, filter_path=['hits.hits'])
+        else:
+            result = await self.application.es_client.search(index=options.index_name, body=query, filter_path=['hits.hits'])
         self.finish(result)
 
-    @web.asynchronous
-    @gen.engine
-    def post(self, *args, **kwargs):
+    async def post(self, *args, **kwargs):
         raw_data = self.request.body
         data = validate_puzzle_data(self.schema, raw_data)
-        result = yield self.application.es_client.index(index=options.index_name,
+        result = await self.application.es_client.index(index=options.index_name,
                                                         doc_type=options.es_type,
                                                         body=data)
         self.finish(result)
@@ -48,25 +57,19 @@ class SinglePuzzleHandler(BaseHandler):
     """Read, Update and Delete handler.
     """
 
-    @web.asynchronous
-    @gen.engine
-    def delete(self, *args, **kwargs):
-        result = yield self.application.es_client.delete(index=options.index_name, doc_type=options.es_type,
+    async def delete(self, *args, **kwargs):
+        result = await self.application.es_client.delete(index=options.index_name, doc_type=options.es_type,
                                                          id=self.path_kwargs['id'])
         self.finish(result)
 
-    @web.asynchronous
-    @gen.engine
-    def get(self, *args, **kwargs):
-        result = yield self.application.es_client.get(index=options.index_name, doc_type=options.es_type,
-                                                      id=self.path_kwargs['id'])
+    async def get(self, *args, **kwargs):
+        result = await self.application.es_client.get(index=options.index_name, doc_type=options.es_type,
+                                                      id=self.path_kwargs['id'], filter_path=['_source'])
         self.finish(result)
 
-    @web.asynchronous
-    @gen.engine
-    def put(self, *args, **kwargs):
+    async def put(self, *args, **kwargs):
         raw_data = self.request.body
         #data = validate_puzzle_data(self.schema, raw_data)
-        result = yield self.application.es_client.index(index=options.index_name, doc_type=options.es_type,
+        result = await self.application.es_client.index(index=options.index_name, doc_type=options.es_type,
                                                         id=self.path_kwargs['id'], body=raw_data)
         self.finish(result)
